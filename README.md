@@ -8,4 +8,5 @@ Data source: https://www.tsa.gov/foia/readingroom
 
 ### System Workflow
 
-[System Workflow](assets/mind-map.png) (assets/directory-structure.png "System Workflow")
+![System Workflow](assets/mind-map.png "System Workflow")
+
