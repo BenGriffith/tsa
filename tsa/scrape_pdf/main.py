@@ -1,65 +1,34 @@
 import json
 
 import requests
-import vertexai
 from bs4 import BeautifulSoup
 from google.cloud import storage
-from vertexai.generative_models import GenerativeModel
-from vertexai.preview import generative_models
+from model import extract_date
 
-MODEL = "gemini-1.5-pro-preview-0409"
 BUCKET = "tsa-throughput"
 PROCESSED_DATES = "processed-tsa-dates.json"
 DOMAIN = "https://www.tsa.gov/"
 TSA_URL = "https://www.tsa.gov/foia/readingroom"
-MOST_RECENT_LINKS_COUNT = 5
-
-
-def generate(text, generation_config, safety_settings):
-    vertexai.init()
-    model = GenerativeModel(MODEL)
-    response = model.generate_content(
-        contents=[text],
-        generation_config=generation_config,
-        safety_settings=safety_settings,
-        stream=False,
-    )
-    return response.text.strip(" \n")
-
-
-def extract_date(filename):
-    text = f"""
-    you are an assistant and assigned with the task of extracting dates from an input string
-
-    input string: \"{filename}\",
-
-    return the dates using the format YYYY-MM-DD, YYYY-MM-DD
-    """
-
-    generation_config = {
-        "max_output_tokens": 8192,
-        "temperature": 1,
-        "top_p": 0.95,
-    }
-
-    block_medium_and_above = generative_models.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE
-
-    safety_settings = {
-        generative_models.HarmCategory.HARM_CATEGORY_HATE_SPEECH: block_medium_and_above,
-        generative_models.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: block_medium_and_above,
-        generative_models.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: block_medium_and_above,
-        generative_models.HarmCategory.HARM_CATEGORY_HARASSMENT: block_medium_and_above,
-    }
-
-    filename_date = generate(text, generation_config, safety_settings)
-    return filename_date
+MOST_RECENT_LINKS_COUNT = 3
 
 
 def create_processed_dates_blob(blob):
-    blob.upload_from_string('{"processed_dates": []}')
+    blob.upload_from_string('{"processed_dates": []}', content_type="application/json")
     json_string = blob.download_as_text()
     json_data = json.loads(json_string)
     return json_data
+
+
+def update_processed_dates_blob(processed_dates):
+    client = storage.Client()
+    bucket = client.bucket(BUCKET)
+    blob = bucket.blob(PROCESSED_DATES)
+
+    json_string = blob.download_as_text()
+    json_data = json.loads(json_string)
+    json_data["processed_dates"].extend(processed_dates)
+
+    blob.upload_from_string(json.dumps(json_data), content_type="application/json")
 
 
 def read_tsa_dates_from_gcs():
@@ -68,8 +37,7 @@ def read_tsa_dates_from_gcs():
     blob = bucket.blob(PROCESSED_DATES)
     if blob.exists():
         json_string = blob.download_as_text()
-        json_data = json.loads(json_string)
-        return json_data
+        return json.loads(json_string)
     return create_processed_dates_blob(blob)
 
 
@@ -95,6 +63,8 @@ def write_pdf(link, blob_name):
     bucket = client.bucket(BUCKET)
     blob = bucket.blob(blob_name)
     blob.upload_from_string(response.content, content_type="application/pdf")
+    if blob.exists:
+        return True
 
 
 def process_pdf():
@@ -105,7 +75,7 @@ def process_pdf():
 
     for link in links_to_process:
         first_date, second_date = extract_date(link).split(", ")
-        if first_date in links_processed or second_date in links_processed:
+        if first_date in links_processed_set or second_date in links_processed_set:
             links_to_not_process.add(link)
 
     links_to_process_set = set(links_to_process)
@@ -114,13 +84,9 @@ def process_pdf():
     dates_processed = []
     for link in links_to_be_processed:
         blob_name = link.split("/")[-1]
-        write_pdf(link, blob_name)
+        blob_created = write_pdf(link, blob_name)
+        if blob_created:
+            dates_processed += extract_date(blob_name).split(", ")
 
-    # get dates from links to be processed
-    # get dates already processed
-    # check if dates to be processed already exist in file
-    # links processed should be added to processed links
-
-
-if __name__ == "__main__":
-    process_pdf()
+    if dates_processed:
+        update_processed_dates_blob(dates_processed)
