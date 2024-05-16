@@ -24,12 +24,13 @@ resource "google_cloudfunctions_function" "scrape_pdf" {
   region = var.region
   description = "scrape pdf from TSA FOIA"
   runtime = "python39"
-  available_memory_mb = 256
+  available_memory_mb = 512
   timeout = 180
   source_archive_bucket = google_storage_bucket.tsa_throughput.name
   source_archive_object = "cloud-function/scrape_pdf.zip"
   entry_point = "process_pdf"
-  trigger_http = true
+  vpc_connector = google_vpc_access_connector.serverless_connector.name
+  vpc_connector_egress_settings = "PRIVATE_RANGES_ONLY"
 
   environment_variables = {
     PROJECT = var.project_id
@@ -37,6 +38,10 @@ resource "google_cloudfunctions_function" "scrape_pdf" {
     BUCKET = var.bucket
     PROCESSED_DATES = var.processed_dates
   }
+
+  trigger_http = true
+
+  depends_on = [ google_project_iam_member.scheduler_invoker ]
 }
 
 resource "google_service_account" "scheduler_sa" {
