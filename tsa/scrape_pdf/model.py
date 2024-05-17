@@ -1,10 +1,12 @@
+import os
+
 import vertexai
 from vertexai.generative_models import GenerativeModel
 from vertexai.preview import generative_models
 
 MODEL = "gemini-1.5-pro-preview-0409"
-PROJECT = ""
-REGION = "us-central1"
+PROJECT = os.getenv("PROJECT")
+REGION = os.getenv("REGION")
 
 
 def generate(text, generation_config, safety_settings):
