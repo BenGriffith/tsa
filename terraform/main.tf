@@ -12,6 +12,12 @@ resource "google_storage_bucket" "tsa_throughput" {
   }
 }
 
+resource "google_storage_bucket_object" "source_folder" {
+  name = "${var.source_pdf_prefix}/"
+  content = " "
+  bucket = google_storage_bucket.tsa_throughput.name
+}
+
 resource "google_vpc_access_connector" "serverless_connector" {
   name = "serverless-connector"
   region = var.region
@@ -37,12 +43,32 @@ resource "google_cloudfunctions_function" "scrape_pdf" {
     REGION = var.region
     BUCKET = var.bucket
     PROCESSED_DATES = var.processed_dates
+    SOURCE_PDF_PREFIX = var.source_pdf_prefix
   }
 
   trigger_http = true
 
   depends_on = [ google_project_iam_member.scheduler_invoker ]
 }
+
+# resource "google_cloudfunctions_function" "create_pdf" {
+#   name = "create-pdf"
+#   region = var.region
+#   description = "create pdfs by date"
+#   runtime = "python39"
+#   available_memory_mb = 512
+#   timeout = 3600
+#   source_archive_bucket = google_storage_bucket.tsa_throughput.name
+#   source_archive_object = "cloud-function/create_pdf.zip"
+#   entry_point = "process_pdf_dates"
+#   vpc_connector = google_vpc_access_connector.serverless_connector.name
+#   vpc_connector_egress_settings = "PRIVATE_RANGES_ONLY"
+
+#   event_trigger {
+#     event_type = "google.storage.object.finalize"
+#     resource = google_storage_bucket_object.source_folder.name
+#   }
+# }
 
 resource "google_service_account" "scheduler_sa" {
   account_id = "scheduler-sa"

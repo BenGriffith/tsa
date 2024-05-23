@@ -1,24 +1,11 @@
-variable "project_id" {
-  type = string
-  default = "playground"
-}
+variable "project_id" {}
 
-variable "location" {
-  type = string
-  default = "us"
-}
+variable "location" {}
 
-variable "region" {
-  type = string
-  default = "us-central1"
-}
+variable "region" {}
 
-variable "bucket" {
-  type = string
-  default = "tsa-throughput"
-}
+variable "bucket" {}
 
-variable "processed_dates" {
-  type = string
-  default = "processed-tsa-dates.json"
-}
+variable "processed_dates" {}
+
+variable "source_pdf_prefix" {}

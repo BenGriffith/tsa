@@ -7,6 +7,7 @@ from google.cloud import storage
 from model import extract_date
 
 BUCKET = os.getenv("BUCKET")
+SOURCE_PDF_PREFIX = os.getenv("SOURCE_PDF_PREFIX")
 PROCESSED_DATES = os.getenv("PROCESSED_DATES")
 DOMAIN = "https://www.tsa.gov/"
 TSA_URL = "https://www.tsa.gov/foia/readingroom"
@@ -23,7 +24,7 @@ def create_processed_dates_blob(blob):
 def update_processed_dates_blob(processed_dates):
     client = storage.Client()
     bucket = client.bucket(BUCKET)
-    blob = bucket.blob(PROCESSED_DATES)
+    blob = bucket.blob(f"{SOURCE_PDF_PREFIX}/{PROCESSED_DATES}")
 
     json_string = blob.download_as_text()
     json_data = json.loads(json_string)
@@ -35,7 +36,7 @@ def update_processed_dates_blob(processed_dates):
 def read_tsa_dates_from_gcs():
     client = storage.Client()
     bucket = client.bucket(BUCKET)
-    blob = bucket.blob(PROCESSED_DATES)
+    blob = bucket.blob(f"{SOURCE_PDF_PREFIX}/{PROCESSED_DATES}")
     if blob.exists():
         json_string = blob.download_as_text()
         return json.loads(json_string)
@@ -62,7 +63,7 @@ def write_pdf(link, blob_name):
 
     client = storage.Client()
     bucket = client.bucket(BUCKET)
-    blob = bucket.blob(blob_name)
+    blob = bucket.blob(f"{SOURCE_PDF_PREFIX}/{blob_name}")
     blob.upload_from_string(response.content, content_type="application/pdf")
     if blob.exists:
         return True

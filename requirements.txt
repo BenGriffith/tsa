@@ -128,6 +128,8 @@ pydantic==2.7.1
     # via google-cloud-aiplatform
 pydantic-core==2.18.2
     # via pydantic
+pypdf2==3.0.1
+    # via -r requirements.in
 pypdfium2==4.30.0
     # via pdfplumber
 python-dateutil==2.9.0.post0
