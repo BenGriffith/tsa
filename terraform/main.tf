@@ -105,11 +105,6 @@ resource "google_cloudfunctions_function" "create_pdf" {
     event_type = "google.pubsub.topic.publish"
     resource = google_pubsub_topic.pdf_topic.name
   }
-
-  depends_on = [
-    google_project_iam_member.function_sa_storage,
-    google_project_iam_member.function_sa_pubsub
-  ]
 }
 
 resource "google_cloud_scheduler_job" "scrape_pdf_job" {
