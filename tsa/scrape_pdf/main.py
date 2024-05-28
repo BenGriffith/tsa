@@ -1,12 +1,14 @@
 import json
+import os
 
 import requests
 from bs4 import BeautifulSoup
 from google.cloud import storage
 from model import extract_date
 
-BUCKET = "tsa-throughput"
-PROCESSED_DATES = "processed-tsa-dates.json"
+BUCKET = os.getenv("BUCKET")
+SOURCE_PDF_PREFIX = os.getenv("SOURCE_PDF_PREFIX")
+PROCESSED_DATES = os.getenv("PROCESSED_DATES")
 DOMAIN = "https://www.tsa.gov/"
 TSA_URL = "https://www.tsa.gov/foia/readingroom"
 MOST_RECENT_LINKS_COUNT = 3
@@ -22,7 +24,7 @@ def create_processed_dates_blob(blob):
 def update_processed_dates_blob(processed_dates):
     client = storage.Client()
     bucket = client.bucket(BUCKET)
-    blob = bucket.blob(PROCESSED_DATES)
+    blob = bucket.blob(f"{SOURCE_PDF_PREFIX}/{PROCESSED_DATES}")
 
     json_string = blob.download_as_text()
     json_data = json.loads(json_string)
@@ -34,7 +36,7 @@ def update_processed_dates_blob(processed_dates):
 def read_tsa_dates_from_gcs():
     client = storage.Client()
     bucket = client.bucket(BUCKET)
-    blob = bucket.blob(PROCESSED_DATES)
+    blob = bucket.blob(f"{SOURCE_PDF_PREFIX}/{PROCESSED_DATES}")
     if blob.exists():
         json_string = blob.download_as_text()
         return json.loads(json_string)
@@ -61,13 +63,14 @@ def write_pdf(link, blob_name):
 
     client = storage.Client()
     bucket = client.bucket(BUCKET)
-    blob = bucket.blob(blob_name)
+    blob = bucket.blob(f"{SOURCE_PDF_PREFIX}/{blob_name}")
     blob.upload_from_string(response.content, content_type="application/pdf")
     if blob.exists:
         return True
 
 
-def process_pdf():
+def process_pdf(context):
+
     links_to_process = read_pdf()
     links_processed = read_tsa_dates_from_gcs()
     links_processed_set = set(links_processed["processed_dates"])
@@ -90,3 +93,5 @@ def process_pdf():
 
     if dates_processed:
         update_processed_dates_blob(dates_processed)
+
+    return "Processing complete", 200
