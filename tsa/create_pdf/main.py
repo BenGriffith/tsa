@@ -1,22 +1,13 @@
 import base64
-import io
 import json
+import os
 import re
 from datetime import datetime, timedelta
 
-import numpy as np
-import pdfplumber
-from google.cloud import storage
-from PyPDF2 import PdfReader, PdfWriter
+from google.cloud import pubsub_v1
 
-
-def pdf_file_like(bucket_name, blob_name):
-    client = storage.Client()
-    bucket = client.bucket(bucket_name)
-    blob = bucket.get_blob(blob_name)
-    pdf_bytes = blob.download_as_bytes()
-    pdf_file_like = io.BytesIO(pdf_bytes)
-    return pdf_file_like
+PROJECT = os.environ["PROJECT"]
+TOPIC = os.environ["TOPIC"]
 
 
 def read_pdf_dates(blob_name):
@@ -38,29 +29,20 @@ def read_pdf_dates(blob_name):
     return date_list
 
 
-def create_pdfs_by_date(bucket_name, dates, pdf_file):
-    client = storage.Client()
-    bucket = client.bucket(bucket_name)
-    pdf_reader = PdfReader(pdf_file)
+def publish_pdf_date_messages(bucket_name, blob_name, pdf_dates):
+    publisher = pubsub_v1.PublisherClient()
+    topic_path = publisher.topic_path(PROJECT, TOPIC)
 
-    with pdfplumber.open(pdf_file) as pdf:
-        table_settings = {"vertical_strategy": "lines", "horizontal_strategy": "lines"}
-
-        for date in dates:
-            pdf_writer = PdfWriter()
-            for i, page in enumerate(pdf.pages, start=1):
-                table_lattice = page.extract_table(table_settings)
-                rows = table_lattice[1:]
-                np_rows = np.array(rows)
-                first_elements = np_rows[:, 0]
-                if date in first_elements:
-                    pdf_writer.add_page(pdf_reader.pages[i - 1])
-
-            date_format = datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
-            output_pdf = f"{date_format}.pdf"
-            blob = bucket.blob(output_pdf)
-            with blob.open("wb") as daily_pdf:
-                pdf_writer.write(daily_pdf)
+    for pdf_date in pdf_dates:
+        message_json = json.dumps(
+            {
+                "bucket": bucket_name,
+                "blob": blob_name,
+                "pdf_date": pdf_date,
+            }
+        )
+        message_bytes = message_json.encode("utf-8")
+        publisher.publish(topic_path, data=message_bytes)
 
 
 def process_pdf_dates(event, context):
@@ -70,6 +52,5 @@ def process_pdf_dates(event, context):
     bucket_name = message_json["bucket"]
     blob_name = message_json["name"]
 
-    pdf_file = pdf_file_like(bucket_name, blob_name)
     pdf_dates = read_pdf_dates(blob_name)
-    create_pdfs_by_date(bucket_name, pdf_dates, pdf_file)
+    publish_pdf_date_messages(bucket_name, blob_name, pdf_dates)
