@@ -6,6 +6,15 @@ resource "google_pubsub_topic" "pdf_topic" {
   name = "pdf-topic"
 }
 
+resource "google_pubsub_topic" "create_pdf_topic" {
+  name = "create-pdf-topic"
+}
+
+resource "google_pubsub_subscription" "create_pdf_subscription" {
+  name = "create-pdf-subscription"
+  topic = google_pubsub_topic.create_pdf_topic.name
+}
+
 resource "google_storage_bucket" "tsa_throughput" {
   name = var.bucket
   location = var.location
@@ -100,6 +109,11 @@ resource "google_cloudfunctions_function" "create_pdf" {
   entry_point = "process_pdf_dates"
   vpc_connector = google_vpc_access_connector.serverless_connector.name
   vpc_connector_egress_settings = "PRIVATE_RANGES_ONLY"
+
+  environment_variables = {
+    PROJECT = var.project_id
+    TOPIC = google_pubsub_topic.create_pdf_topic.name
+  }
 
   event_trigger {
     event_type = "google.pubsub.topic.publish"
