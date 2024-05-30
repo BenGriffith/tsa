@@ -2,6 +2,8 @@ provider "google" {
   project = var.project_id
 }
 
+
+# Pub/Sub
 resource "google_pubsub_topic" "pdf_topic" {
   name = "pdf-topic"
 }
@@ -15,6 +17,8 @@ resource "google_pubsub_subscription" "create_pdf_subscription" {
   topic = google_pubsub_topic.create_pdf_topic.name
 }
 
+
+# Cloud Storage
 resource "google_storage_bucket" "tsa_throughput" {
   name = var.bucket
   location = var.location
@@ -45,6 +49,8 @@ resource "google_storage_notification" "pdf_notification" {
   depends_on = [ google_pubsub_topic_iam_binding.binding ]
 }
 
+
+# Networking
 resource "google_vpc_access_connector" "serverless_connector" {
   name = "serverless-connector"
   region = var.region
@@ -52,6 +58,8 @@ resource "google_vpc_access_connector" "serverless_connector" {
   ip_cidr_range = "10.8.0.0/28"
 }
 
+
+# IAM
 resource "google_service_account" "scheduler_sa" {
   account_id = "scheduler-sa"
   display_name = "Scheduler Service Account"
@@ -71,6 +79,8 @@ resource "google_pubsub_topic_iam_binding" "binding" {
   members = ["serviceAccount:${data.google_storage_project_service_account.gcs_account.email_address}"]
 }
 
+
+# Cloud Functions
 resource "google_cloudfunctions_function" "scrape_pdf" {
   name = "scrape-pdf"
   region = var.region
@@ -121,6 +131,8 @@ resource "google_cloudfunctions_function" "create_pdf" {
   }
 }
 
+
+# Cloud Scheduler
 resource "google_cloud_scheduler_job" "scrape_pdf_job" {
   name = "scrape-pdf-job"
   region = var.region
