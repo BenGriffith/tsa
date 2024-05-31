@@ -46,8 +46,8 @@ def process_pdf_by_date(event, context):
     pubsub_message = base64.b64decode(event["data"]).decode("utf-8")
     message_json = json.loads(pubsub_message)
 
-    bucket_name = message_json["bucket_name"]
-    blob_name = message_json["blob_name"]
+    bucket_name = message_json["bucket"]
+    blob_name = message_json["blob"]
     pdf_date = message_json["pdf_date"]
 
     pdf_file = pdf_file_like(bucket_name, blob_name)
