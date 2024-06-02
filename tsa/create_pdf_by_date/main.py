@@ -46,8 +46,8 @@ def create_pdf_by_date(bucket_name, date, pdf_file):
 
 
 @app.post("/process_pdf_by_date/")
-def process_pdf_by_date(background_tasks: BackgroundTasks, request: Request):
-    pubsub_message = request.body()
+async def process_pdf_by_date(background_tasks: BackgroundTasks, request: Request):
+    pubsub_message = await request.body()
     pubsub_message = base64.b64decode(pubsub_message).decode("utf-8")
     message_json = json.loads(pubsub_message)
 
