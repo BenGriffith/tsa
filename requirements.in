@@ -4,3 +4,6 @@ pdfplumber
 beautifulsoup4
 google-cloud-aiplatform
 PyPDF2
+google-cloud-pubsub
+numpy
+fastapi

@@ -12,6 +12,16 @@ resource "google_pubsub_topic" "create_pdf_topic" {
   name = "create-pdf-topic"
 }
 
+resource "google_pubsub_subscription" "create_pdf_by_date_subscription" {
+  name = "create-pdf-by-date-subscription"
+  topic = google_pubsub_topic.create_pdf_topic.name
+  push_config {
+    push_endpoint = "${google_cloud_run_v2_service.create_pdf_by_date.uri}/process_pdf_by_date/"
+  }
+
+  ack_deadline_seconds = 600
+}
+
 
 # Cloud Storage
 resource "google_storage_bucket" "tsa_throughput" {
@@ -58,18 +68,6 @@ resource "google_storage_bucket_object" "create_pdf" {
   name = "cloud-function/create_pdf.zip"
   bucket = google_storage_bucket.tsa_throughput.name
   source = data.archive_file.create_pdf_function.output_path
-}
-
-data "archive_file" "create_pdf_by_date_function" {
-  type = "zip"
-  source_dir = "${path.root}/../tsa/create_pdf_by_date"
-  output_path = "${path.root}/../create_pdf_by_date.zip"
-}
-
-resource "google_storage_bucket_object" "create_pdf_by_date" {
-  name = "cloud-function/create_pdf_by_date.zip"
-  bucket = google_storage_bucket.tsa_throughput.name
-  source = data.archive_file.create_pdf_by_date_function.output_path
 }
 
 resource "google_storage_notification" "pdf_notification" {
@@ -164,22 +162,42 @@ resource "google_cloudfunctions_function" "create_pdf" {
   }
 }
 
-resource "google_cloudfunctions_function" "create_pdf_by_date" {
-  name = "create-pdf-by-date"
-  region = var.region
-  description = "create pdf by date"
-  runtime = "python39"
-  available_memory_mb = 4096
-  timeout = 540
-  source_archive_bucket = google_storage_bucket.tsa_throughput.name
-  source_archive_object = google_storage_bucket_object.create_pdf_by_date.name
-  entry_point = "process_pdf_by_date"
-  vpc_connector = google_vpc_access_connector.serverless_connector.name
 
-  event_trigger {
-    event_type = "google.pubsub.topic.publish"
-    resource = google_pubsub_topic.create_pdf_topic.name
+# Cloud Run
+resource "google_cloud_run_v2_service" "create_pdf_by_date" {
+  name = "create-pdf-by-date"
+  location = var.region
+
+  template {
+    containers {
+      image = "gcr.io/${var.project_id}/create-pdf-by-date:latest"
+
+      resources {
+        #cpu_idle = false
+        limits = {
+          cpu = "4"
+          memory = "8Gi"
+        }
+      }
+      command = ["uvicorn"]
+      args = ["main:app", "--host", "0.0.0.0", "--port", "8080"]
+    }
+
+    timeout = "3600s"
+
+    vpc_access {
+      connector = google_vpc_access_connector.serverless_connector.id
+      egress = "ALL_TRAFFIC"
+    }
   }
+}
+
+resource "google_cloud_run_service_iam_member" "unauth_invoker" {
+  project = var.project_id
+  location = google_cloud_run_v2_service.create_pdf_by_date.location
+  service = google_cloud_run_v2_service.create_pdf_by_date.name
+  role = "roles/run.invoker"
+  member = "allUsers"
 }
 
 
