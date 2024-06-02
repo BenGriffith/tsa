@@ -41,6 +41,7 @@ def create_pdf_by_date(bucket_name, date, pdf_file):
 
         pdf_writer = PdfWriter()
         for i, page in matching_pages_generator(pdf, date, table_settings):
+            print(f"for {date} adding page {i}")
             pdf_writer.add_page(pdf_reader.pages[i - 1])
 
         date_format = datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
