@@ -5,8 +5,6 @@ from datetime import datetime
 
 import numpy as np
 import pdfplumber
-
-# from fastapi import BackgroundTasks, FastAPI, Request
 from fastapi import FastAPI, Request
 from google.cloud import storage
 from PyPDF2 import PdfReader, PdfWriter
@@ -43,7 +41,6 @@ def create_pdf_by_date(bucket_name, date, pdf_file):
 
         pdf_writer = PdfWriter()
         for i, page in matching_pages_generator(pdf, date, table_settings):
-            print(f"for {date} adding page {i}")
             pdf_writer.add_page(pdf_reader.pages[i - 1])
 
         date_format = datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
@@ -55,23 +52,18 @@ def create_pdf_by_date(bucket_name, date, pdf_file):
 
 @app.post("/process_pdf_by_date/")
 async def process_pdf_by_date(request: Request):
-    print("entered process_pdf_by_date")
     pubsub_message = await request.json()
-    print(pubsub_message)
     pubsub_message = pubsub_message["message"]
     pubsub_message = base64.b64decode(pubsub_message["data"]).decode("utf-8")
     message_json = json.loads(pubsub_message)
-
-    print(message_json)
 
     bucket_name = message_json["bucket"]
     blob_name = message_json["blob"]
     pdf_date = message_json["pdf_date"]
     pdf_file = pdf_file_like(bucket_name, blob_name)
 
-    # background_tasks.add_task(create_pdf_by_date, bucket_name, pdf_date, pdf_file)
     try:
         create_pdf_by_date(bucket_name, pdf_date, pdf_file)
-        return "", 200
+        return f"Processing completed for {pdf_date}", 200
     except Exception as e:
-        return "", 500
+        return f"Error encountered: {e}", 500

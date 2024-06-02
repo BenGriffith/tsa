@@ -2,7 +2,7 @@ name: Build and Deploy Container
 
 on:
     push:
-        branches: [ "create-pdf" ]
+        branches: [ "create-pdf-by-date-image" ]
 
 env:
     PROJECT_ID: "${{ secrets.PROJECT_ID}}"
