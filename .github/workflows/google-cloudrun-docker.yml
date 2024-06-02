@@ -9,6 +9,7 @@ env:
     GAR_LOCATION: "us-central1"
     SERVICE: "create-pdf-by-date"
     REGION: "us-central1"
+    TAG: "latest"
 
 jobs:
     deploy:
@@ -39,8 +40,8 @@ jobs:
               run: |-
                 cp requirements.txt tsa/create_pdf_by_date/
                 cd tsa/create_pdf_by_date/
-                docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}" ./
-                docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}"
+                docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ env.TAG }}" ./
+                docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ env.TAG }}"
 
             - name: Deploy to Cloud Run
               id: deploy
