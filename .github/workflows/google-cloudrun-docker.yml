@@ -38,6 +38,7 @@ jobs:
 
             - name: Build and Push Container
               run: |-
+                cd "$(dirname "$0")/.."
                 cp requirements.txt tsa/create_pdf_by_date/
                 cd tsa/create_pdf_by_date/
                 docker build -t "gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ env.TAG }}" ./
