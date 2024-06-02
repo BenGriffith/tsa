@@ -21,6 +21,16 @@ def pdf_file_like(bucket_name, blob_name):
     return pdf_file_like
 
 
+def matching_pages_generator(pdf, date, table_settings):
+    for i, page in enumerate(pdf.pages, start=1):
+        table_lattice = page.extract_table(table_settings)
+        rows = table_lattice[1:]
+        np_rows = np.array(rows)
+        first_elements = np_rows[:, 0]
+        if date in first_elements:
+            yield i, page
+
+
 def create_pdf_by_date(bucket_name, date, pdf_file):
     client = storage.Client()
     bucket = client.bucket(bucket_name)
@@ -30,13 +40,8 @@ def create_pdf_by_date(bucket_name, date, pdf_file):
         table_settings = {"vertical_strategy": "lines", "horizontal_strategy": "lines"}
 
         pdf_writer = PdfWriter()
-        for i, page in enumerate(pdf.pages, start=1):
-            table_lattice = page.extract_table(table_settings)
-            rows = table_lattice[1:]
-            np_rows = np.array(rows)
-            first_elements = np_rows[:, 0]
-            if date in first_elements:
-                pdf_writer.add_page(pdf_reader.pages[i - 1])
+        for i, page in matching_pages_generator(pdf, date, table_settings):
+            pdf_writer.add_page(pdf_reader.pages[i - 1])
 
         date_format = datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
         output_pdf = f"{date_format}.pdf"
