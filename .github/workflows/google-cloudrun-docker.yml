@@ -42,11 +42,3 @@ jobs:
                 cd tsa/create_pdf_by_date/
                 docker build -t "gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ env.TAG }}" ./
                 docker push "gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ env.TAG }}"
-
-            - name: Deploy to Cloud Run
-              id: deploy
-              uses: google-github-actions/deploy-cloudrun@v2
-              with:
-                service: ${{ env.SERVICE }}
-                region: ${{ env.REGION }}
-                image: gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{env.TAG }}
