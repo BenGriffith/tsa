@@ -5,8 +5,11 @@ from datetime import datetime
 
 import numpy as np
 import pdfplumber
+from fastapi import BackgroundTasks, FastAPI, Request
 from google.cloud import storage
 from PyPDF2 import PdfReader, PdfWriter
+
+app = FastAPI()
 
 
 def pdf_file_like(bucket_name, blob_name):
@@ -18,7 +21,7 @@ def pdf_file_like(bucket_name, blob_name):
     return pdf_file_like
 
 
-def create_pdfs_by_date(bucket_name, date, pdf_file):
+def create_pdf_by_date(bucket_name, date, pdf_file):
     client = storage.Client()
     bucket = client.bucket(bucket_name)
     pdf_reader = PdfReader(pdf_file)
@@ -42,13 +45,16 @@ def create_pdfs_by_date(bucket_name, date, pdf_file):
             pdf_writer.write(daily_pdf)
 
 
-def process_pdf_by_date(event, context):
-    pubsub_message = base64.b64decode(event["data"]).decode("utf-8")
+@app.post("/process_pdf_by_date/")
+def process_pdf_by_date(background_tasks: BackgroundTasks, request: Request):
+    pubsub_message = request.body()
+    pubsub_message = base64.b64decode(pubsub_message).decode("utf-8")
     message_json = json.loads(pubsub_message)
 
     bucket_name = message_json["bucket"]
     blob_name = message_json["blob"]
     pdf_date = message_json["pdf_date"]
-
     pdf_file = pdf_file_like(bucket_name, blob_name)
-    create_pdfs_by_date(bucket_name, pdf_date, pdf_file)
+
+    background_tasks.add_task(create_pdf_by_date, bucket_name, pdf_date, pdf_file)
+    return {"message": "PDF processing started"}
