@@ -34,14 +34,14 @@ jobs:
               with:
                 username: _json_key
                 password: "${{ secrets.GCP_CREDENTIALS }}"
-                registry: "${{ env.GAR_LOCATION }}-docker.pkg.dev"
+                registry: "gcr.io"
 
             - name: Build and Push Container
               run: |-
                 cp requirements.txt tsa/create_pdf_by_date/
                 cd tsa/create_pdf_by_date/
-                docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ env.TAG }}" ./
-                docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ env.TAG }}"
+                docker build -t "gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ env.TAG }}" ./
+                docker push "gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ env.TAG }}"
 
             - name: Deploy to Cloud Run
               id: deploy
