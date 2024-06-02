@@ -47,14 +47,16 @@ def create_pdf_by_date(bucket_name, date, pdf_file):
 
 @app.post("/process_pdf_by_date/")
 async def process_pdf_by_date(background_tasks: BackgroundTasks, request: Request):
-    pubsub_message = await request.body()
-    pubsub_message = base64.b64decode(pubsub_message).decode("utf-8")
+    pubsub_message = await request.json()
+    pubsub_message = pubsub_message["message"]
+    pubsub_message = base64.b64decode(pubsub_message["data"]).decode("utf-8")
+    print(pubsub_message)
     message_json = json.loads(pubsub_message)
 
-    bucket_name = message_json["bucket"]
-    blob_name = message_json["blob"]
-    pdf_date = message_json["pdf_date"]
-    pdf_file = pdf_file_like(bucket_name, blob_name)
+    # bucket_name = message_json["bucket"]
+    # blob_name = message_json["blob"]
+    # pdf_date = message_json["pdf_date"]
+    # pdf_file = pdf_file_like(bucket_name, blob_name)
 
-    background_tasks.add_task(create_pdf_by_date, bucket_name, pdf_date, pdf_file)
+    # background_tasks.add_task(create_pdf_by_date, bucket_name, pdf_date, pdf_file)
     return {"message": "PDF processing started"}
