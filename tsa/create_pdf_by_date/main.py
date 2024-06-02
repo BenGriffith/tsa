@@ -41,7 +41,6 @@ def create_pdf_by_date(bucket_name, date, pdf_file):
 
         pdf_writer = PdfWriter()
         for i, page in matching_pages_generator(pdf, date, table_settings):
-            print(f"for {date}: Adding page {i}")
             pdf_writer.add_page(pdf_reader.pages[i - 1])
 
         date_format = datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
@@ -66,4 +65,4 @@ async def process_pdf_by_date(background_tasks: BackgroundTasks, request: Reques
     pdf_file = pdf_file_like(bucket_name, blob_name)
 
     background_tasks.add_task(create_pdf_by_date, bucket_name, pdf_date, pdf_file)
-    return {"message": "PDF processing started"}
+    return "", 200
