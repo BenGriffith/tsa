@@ -7,27 +7,19 @@ repos:
       - id: end-of-file-fixer
       - id: debug-statements
 
-  - repo: https://github.com/pycqa/flake8
-    rev: 7.0.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.4.7
     hooks:
-      - id: flake8
-        args: ["--max-line-length=110", "--ignore=F841"]
+      - id: ruff
+        args: [ --fix, --max-line-length=110, --ignore=F841]
+      - id: ruff-format
+        types_or: [ python ]
 
-  - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
-        args: ["--profile", "black", "--filter-files"]
-
-  - repo: https://github.com/psf/black
-    rev: 24.3.0
-    hooks:
-      - id: black
-        language_version: python3
-        args: ["--line-length=110"]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.9.0
     hooks:
       - id: mypy
-        additional_dependencies: [google-cloud, types-requests]
+        additional_dependencies:
+          - google-cloud
+          - types-requests
