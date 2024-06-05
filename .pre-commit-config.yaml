@@ -11,7 +11,7 @@ repos:
     rev: v0.4.7
     hooks:
       - id: ruff
-        args: [ --fix, --max-line-length=110, --ignore=F841]
+        args: [ --fix, --line-length=110, --ignore=F841]
       - id: ruff-format
         types_or: [ python ]
 
