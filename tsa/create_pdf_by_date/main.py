@@ -28,26 +28,26 @@ def matching_pages_generator(pdf, date, table_settings):
         np_rows = np.array(rows)
         first_elements = np_rows[:, 0]
         if date in first_elements:
-            yield i, page
+            yield i
 
 
 def create_pdf_by_date(bucket_name, date, pdf_file):
     client = storage.Client()
     bucket = client.bucket(bucket_name)
     pdf_reader = PdfReader(pdf_file)
+    date_format = datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
 
     with pdfplumber.open(pdf_file) as pdf:
         table_settings = {"vertical_strategy": "lines", "horizontal_strategy": "lines"}
 
-        pdf_writer = PdfWriter()
-        for i, page in matching_pages_generator(pdf, date, table_settings):
-            pdf_writer.add_page(pdf_reader.pages[i - 1])
+        for page_count in matching_pages_generator(pdf, date, table_settings):
+            pdf_writer = PdfWriter()
+            pdf_writer.add_page(pdf_reader.pages[page_count - 1])
 
-        date_format = datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
-        output_pdf = f"{date_format}.pdf"
-        blob = bucket.blob(output_pdf)
-        with blob.open("wb") as daily_pdf:
-            pdf_writer.write(daily_pdf)
+            output_pdf = f"{date_format}/{page_count}.pdf"
+            blob = bucket.blob(output_pdf)
+            with blob.open("wb") as daily_pdf:
+                pdf_writer.write(daily_pdf)
 
 
 @app.post("/process_pdf_by_date/")
