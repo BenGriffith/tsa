@@ -1,13 +1,18 @@
 import base64
 import io
 import json
+import os
 from datetime import datetime
 
 import numpy as np
 import pdfplumber
 from fastapi import FastAPI, Request
 from google.cloud import storage
+from google.cloud import pubsub_v1
 from PyPDF2 import PdfReader, PdfWriter
+
+PROJECT = os.environ["PROJECT"]
+TOPIC = os.environ["TOPIC"]
 
 app = FastAPI()
 
@@ -50,6 +55,15 @@ def create_pdf_by_date(bucket_name, date, pdf_file):
                 pdf_writer.write(daily_pdf)
 
 
+def publish_message(bucket, pdf_date):
+    publisher = pubsub_v1.PublisherClient()
+    topic_path = publisher.topic_path(PROJECT, TOPIC)
+
+    message_json = json.dumps({"bucket": bucket, "pdf_date": pdf_date})
+    message_bytes = message_json.encode("utf-8")
+    publisher.publish(topic_path, message_bytes)
+
+
 @app.post("/process_pdf_by_date/")
 async def process_pdf_by_date(request: Request):
     pubsub_message = await request.json()
@@ -64,6 +78,7 @@ async def process_pdf_by_date(request: Request):
 
     try:
         create_pdf_by_date(bucket_name, pdf_date, pdf_file)
+        publish_message(bucket_name, pdf_date)
         return f"Processing completed for {pdf_date}", 200
     except Exception as e:
         return f"Error encountered: {e}", 500
