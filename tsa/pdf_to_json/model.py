@@ -1,16 +1,12 @@
-import os
-
 import vertexai
 from vertexai.generative_models import GenerativeModel, Part
 from vertexai.preview import generative_models
 
 MODEL = "gemini-1.5-flash-001"
-PROJECT = os.getenv("PROJECT")
-REGION = os.getenv("REGION")
 
 
 def generate(document, text, generation_config, safety_settings):
-    vertexai.init(project=PROJECT, location=REGION)
+    vertexai.init()
     model = GenerativeModel(MODEL)
     responses = model.generate_content(
         contents=[document, text],
@@ -18,12 +14,13 @@ def generate(document, text, generation_config, safety_settings):
         safety_settings=safety_settings,
         stream=True,
     )
-    return [response for response in responses]
+    return [response.text for response in responses]
 
 
 def pdf_to_json(uri):
     document = Part.from_uri(uri, "application/pdf")
-    text = """You are a data extraction specialist. The page title and page title date should be excluded. Return a JSON format."""
+    text = """You are a data extraction specialist. The page title and page title date should be excluded.
+    Return a JSON format. Do not create line breaks between each key/value pair or after each entry."""
 
     generation_config = {
         "max_output_tokens": 8192,
