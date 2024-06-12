@@ -10,7 +10,7 @@ app = FastAPI()
 
 def extract_json_from_pdf(bucket_name, pdf_date):
     client = storage.Client()
-    bucket = client.get_bucket(bucket_name)
+    bucket = client.bucket(bucket_name)
     pdf_date_blobs = bucket.list_blobs(prefix=f"{pdf_date}/", delimiter="/")
     print("inside", bucket_name)
     print("inside", pdf_date)
