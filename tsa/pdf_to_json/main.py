@@ -15,7 +15,7 @@ def extract_json_from_pdf(bucket_name, pdf_date):
     pdf_date_blobs = bucket.list_blobs(prefix=f"{pdf_date}/", delimiter="/")
     print(pdf_date_blobs)
     for i, pdf_date_blob in enumerate(pdf_date_blobs, start=1):
-        if i == 0:
+        if i == 1:
             continue
         uri = f"gs://{bucket_name}/{pdf_date_blob.name}"
         print(uri)
