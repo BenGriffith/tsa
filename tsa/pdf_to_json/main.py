@@ -18,13 +18,15 @@ def extract_json_from_pdf(bucket_name, pdf_date):
         if i == 0:
             continue
         uri = f"gs://{bucket_name}/{pdf_date_blob.name}"
+        print(uri)
         json_response = pdf_to_json(uri)
+        print(json_response)
     return json_response
 
 
 @app.post("/process_tsa_data/")
-async def process_pdf_dates(request: Request):
-    pubsub_message = await request.json()
+def process_pdf_dates(request: Request):
+    pubsub_message = request.json()
     pubsub_message = pubsub_message["message"]
     pubsub_message = base64.b64decode(pubsub_message["data"]).decode("utf-8")
     message_json = json.loads(pubsub_message)

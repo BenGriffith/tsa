@@ -65,8 +65,8 @@ def publish_message(bucket, pdf_date):
 
 
 @app.post("/process_pdf_by_date/")
-async def process_pdf_by_date(request: Request):
-    pubsub_message = await request.json()
+def process_pdf_by_date(request: Request):
+    pubsub_message = request.json()
     pubsub_message = pubsub_message["message"]
     pubsub_message = base64.b64decode(pubsub_message["data"]).decode("utf-8")
     message_json = json.loads(pubsub_message)
