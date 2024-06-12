@@ -14,14 +14,16 @@ def extract_json_from_pdf(bucket_name, pdf_date):
     bucket = client.get_bucket(bucket_name)
     pdf_date_blobs = bucket.list_blobs(prefix=f"{pdf_date}/", delimiter="/")
     print(pdf_date_blobs)
-    for i, pdf_date_blob in enumerate(pdf_date_blobs, start=1):
-        if i == 1:
-            continue
-        uri = f"gs://{bucket_name}/{pdf_date_blob.name}"
-        print(uri)
-        json_response = pdf_to_json(uri)
-        print(json_response)
-    return json_response
+    try:
+        for i, pdf_date_blob in enumerate(pdf_date_blobs, start=1):
+            if i == 1:
+                continue
+            uri = f"gs://{bucket_name}/{pdf_date_blob.name}"
+            print(uri)
+            json_response = pdf_to_json(uri)
+            print(json_response)
+    except:
+        raise
 
 
 @app.post("/process_tsa_data/")
@@ -36,8 +38,7 @@ async def process_pdf_dates(request: Request):
     print(bucket_name)
     print(pdf_date)
     try:
-        json_response = extract_json_from_pdf(bucket_name, pdf_date)
-        print(json_response)
+        extract_json_from_pdf(bucket_name, pdf_date)
         return f"Processing completed for {pdf_date}", 200
     except Exception as e:
         return f"Error encountered: {e}", 500
