@@ -1,7 +1,7 @@
 import base64
 import json
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from google.cloud import storage
 
 from model import pdf_to_json
@@ -25,9 +25,8 @@ def extract_json_from_pdf(bucket_name, pdf_date):
 
 
 @app.post("/process_tsa_data/")
-# def process_pdf_dates(request: Request):
-def process_pdf_dates(payload):
-    pubsub_message = payload  # request.json()
+async def process_pdf_dates(request: Request):
+    pubsub_message = await request.json()
     pubsub_message = pubsub_message["message"]
     pubsub_message = base64.b64decode(pubsub_message["data"]).decode("utf-8")
     message_json = json.loads(pubsub_message)

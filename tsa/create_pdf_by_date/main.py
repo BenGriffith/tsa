@@ -6,7 +6,7 @@ from datetime import datetime
 
 import numpy as np
 import pdfplumber
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from google.cloud import storage
 from google.cloud import pubsub_v1
 from PyPDF2 import PdfReader, PdfWriter
@@ -65,9 +65,8 @@ def publish_message(bucket, pdf_date):
 
 
 @app.post("/process_pdf_by_date/")
-# def process_pdf_by_date(request: Request):
-def process_pdf_by_date(payload):
-    pubsub_message = payload  # request.json()
+async def process_pdf_by_date(request: Request):
+    pubsub_message = await request.json()
     pubsub_message = pubsub_message["message"]
     pubsub_message = base64.b64decode(pubsub_message["data"]).decode("utf-8")
     message_json = json.loads(pubsub_message)
