@@ -78,7 +78,9 @@ async def process_pdf_by_date(request: Request):
 
     try:
         create_pdf_by_date(bucket_name, pdf_date, pdf_file)
+        print(f"Processing completed for {pdf_date}")
         publish_message(bucket_name, pdf_date)
+        print(f"Message published for {pdf_date}")
         return f"Processing completed for {pdf_date}", 200
     except Exception as e:
         return f"Error encountered: {e}", 500
