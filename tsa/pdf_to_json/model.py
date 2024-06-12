@@ -1,12 +1,17 @@
+import os
+
 import vertexai
 from vertexai.generative_models import GenerativeModel, Part
 from vertexai.preview import generative_models
 
 MODEL = "gemini-1.5-flash-001"
 
+PROJECT = os.environ["PROJECT"]
+LOCATION = os.environ["LOCATION"]
+
 
 def generate(document, text, generation_config, safety_settings):
-    vertexai.init()
+    vertexai.init(project=PROJECT, location=LOCATION)
     model = GenerativeModel(MODEL)
     responses = model.generate_content(
         contents=[document, text],
