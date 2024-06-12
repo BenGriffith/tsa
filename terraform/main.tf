@@ -24,6 +24,7 @@ resource "google_pubsub_subscription" "create_pdf_by_date_subscription" {
   }
 
   ack_deadline_seconds = 600
+  enable_exactly_once_delivery = true
 }
 
 resource "google_pubsub_subscription" "tsa_data_to_bigquery_subscription" {
@@ -34,6 +35,7 @@ resource "google_pubsub_subscription" "tsa_data_to_bigquery_subscription" {
   }
 
   ack_deadline_seconds = 600
+  enable_exactly_once_delivery = true
 }
 
 
@@ -198,8 +200,8 @@ resource "google_cloud_run_v2_service" "create_pdf_by_date" {
 
       resources {
         limits = {
-          cpu    = "4"
-          memory = "8Gi"
+          cpu    = "8"
+          memory = "32 Gi"
         }
       }
       command = ["uvicorn"]
@@ -226,7 +228,7 @@ resource "google_cloud_run_v2_service" "tsa_data_to_bigquery" {
       resources {
         limits = {
           cpu    = "4"
-          memory = "4Gi"
+          memory = "8 Gi"
         }
       }
       command = ["uvicorn"]

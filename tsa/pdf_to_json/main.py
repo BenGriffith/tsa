@@ -13,6 +13,7 @@ def extract_json_from_pdf(bucket_name, pdf_date):
     client = storage.Client()
     bucket = client.get_bucket(bucket_name)
     pdf_date_blobs = bucket.list_blobs(prefix=f"{pdf_date}/", delimiter="/")
+    print(pdf_date_blobs)
     for i, pdf_date_blob in enumerate(pdf_date_blobs, start=1):
         if i == 0:
             continue
@@ -30,7 +31,8 @@ async def process_pdf_dates(request: Request):
 
     bucket_name = message_json["bucket"]
     pdf_date = message_json["pdf_date"]
-
+    print(bucket_name)
+    print(pdf_date)
     try:
         json_response = extract_json_from_pdf(bucket_name, pdf_date)
         print(json_response)
