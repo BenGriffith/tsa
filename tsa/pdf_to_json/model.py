@@ -11,7 +11,7 @@ LOCATION = os.environ["LOCATION"]
 
 
 def generate(document, text, generation_config, safety_settings):
-    vertexai.init(project=PROJECT, location=LOCATION)
+    vertexai.init()
     model = GenerativeModel(MODEL)
     responses = model.generate_content(
         contents=[document, text],
