@@ -2,12 +2,13 @@ name: Build and Deploy Container
 
 on:
     push:
-        branches: [ "create-pdf-by-date-image" ]
+        branches: [ "develop" ]
 
 env:
-    PROJECT_ID: "${{ secrets.PROJECT_ID}}"
+    PROJECT_ID: "${{ secrets.PROJECT_ID }}"
     GAR_LOCATION: "us-central1"
-    SERVICE: "create-pdf-by-date"
+    CREATE_PDF_SERVICE: "create-pdf-by-date"
+    TSA_TO_BIGQUERY_SERVICE: "tsa-data-to-bigquery"
     REGION: "us-central1"
     TAG: "latest"
 
@@ -36,9 +37,16 @@ jobs:
                 password: "${{ secrets.GCP_CREDENTIALS }}"
                 registry: "gcr.io"
 
-            - name: Build and Push Container
+            - name: Build and Push Create PDF By Date Container
               run: |-
                 cp requirements.txt tsa/create_pdf_by_date/
                 cd tsa/create_pdf_by_date/
-                docker build -t "gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ env.TAG }}" ./
-                docker push "gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ env.TAG }}"
+                docker build -t "gcr.io/${{ env.PROJECT_ID }}/${{ env.CREATE_PDF_SERVICE }}:${{ env.TAG }}" ./
+                docker push "gcr.io/${{ env.PROJECT_ID }}/${{ env.CREATE_PDF_SERVICE }}:${{ env.TAG }}"
+
+            - name: Build and Push TSA Data to BigQuery Container
+              run: |-
+                cp requirements.txt tsa/pdf_to_json/
+                cd tsa/pdf_to_json/
+                docker build -t "gcr.io/${{ env.PROJECT_ID }}/${{ env.TSA_TO_BIGQUERY_SERVICE }}:${{ env.TAG }}" ./
+                docker push "gcr.io/${{ env.PROJECT_ID }}/${{ env.TSA_TO_BIGQUERY_SERVICE }}:${{ env.TAG }}"

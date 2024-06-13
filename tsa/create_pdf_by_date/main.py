@@ -1,13 +1,18 @@
 import base64
 import io
 import json
+import os
 from datetime import datetime
 
 import numpy as np
 import pdfplumber
 from fastapi import FastAPI, Request
 from google.cloud import storage
+from google.cloud import pubsub_v1
 from PyPDF2 import PdfReader, PdfWriter
+
+PROJECT = os.environ["PROJECT"]
+TOPIC = os.environ["TOPIC"]
 
 app = FastAPI()
 
@@ -28,26 +33,37 @@ def matching_pages_generator(pdf, date, table_settings):
         np_rows = np.array(rows)
         first_elements = np_rows[:, 0]
         if date in first_elements:
-            yield i, page
+            yield i
 
 
 def create_pdf_by_date(bucket_name, date, pdf_file):
     client = storage.Client()
     bucket = client.bucket(bucket_name)
     pdf_reader = PdfReader(pdf_file)
+    date_format = datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
 
     with pdfplumber.open(pdf_file) as pdf:
         table_settings = {"vertical_strategy": "lines", "horizontal_strategy": "lines"}
 
-        pdf_writer = PdfWriter()
-        for i, page in matching_pages_generator(pdf, date, table_settings):
-            pdf_writer.add_page(pdf_reader.pages[i - 1])
+        for page_count in matching_pages_generator(pdf, date, table_settings):
+            pdf_writer = PdfWriter()
+            pdf_writer.add_page(pdf_reader.pages[page_count - 1])
 
-        date_format = datetime.strptime(date, "%m/%d/%Y").strftime("%Y-%m-%d")
-        output_pdf = f"{date_format}.pdf"
-        blob = bucket.blob(output_pdf)
-        with blob.open("wb") as daily_pdf:
-            pdf_writer.write(daily_pdf)
+            output_pdf = f"{date_format}/{page_count}.pdf"
+            blob = bucket.blob(output_pdf)
+            with blob.open("wb") as daily_pdf:
+                pdf_writer.write(daily_pdf)
+
+    return date_format
+
+
+def publish_message(bucket, pdf_date):
+    publisher = pubsub_v1.PublisherClient()
+    topic_path = publisher.topic_path(PROJECT, TOPIC)
+
+    message_json = json.dumps({"bucket": bucket, "pdf_date": pdf_date})
+    message_bytes = message_json.encode("utf-8")
+    publisher.publish(topic_path, message_bytes)
 
 
 @app.post("/process_pdf_by_date/")
@@ -63,7 +79,10 @@ async def process_pdf_by_date(request: Request):
     pdf_file = pdf_file_like(bucket_name, blob_name)
 
     try:
-        create_pdf_by_date(bucket_name, pdf_date, pdf_file)
+        date_format = create_pdf_by_date(bucket_name, pdf_date, pdf_file)
+        print(f"Processing completed for {pdf_date}")
+        publish_message(bucket_name, date_format)
+        print(f"Message published for {pdf_date}")
         return f"Processing completed for {pdf_date}", 200
     except Exception as e:
         return f"Error encountered: {e}", 500
