@@ -24,7 +24,6 @@ resource "google_pubsub_subscription" "create_pdf_by_date_subscription" {
   }
 
   ack_deadline_seconds = 600
-  enable_exactly_once_delivery = true
 }
 
 resource "google_pubsub_subscription" "tsa_data_to_bigquery_subscription" {
@@ -35,7 +34,6 @@ resource "google_pubsub_subscription" "tsa_data_to_bigquery_subscription" {
   }
 
   ack_deadline_seconds = 600
-  enable_exactly_once_delivery = true
 }
 
 
@@ -185,6 +183,10 @@ resource "google_cloud_run_v2_service" "create_pdf_by_date" {
   location = var.region
 
   template {
+    scaling {
+      max_instance_count = 1
+    }
+
     containers {
       image = "gcr.io/${var.project_id}/create-pdf-by-date:latest"
 
@@ -222,13 +224,17 @@ resource "google_cloud_run_v2_service" "tsa_data_to_bigquery" {
   location = var.region
 
   template {
+    scaling {
+      max_instance_count = 1
+    }
+
     containers {
       image = "gcr.io/${var.project_id}/tsa-data-to-bigquery:latest"
 
       resources {
         limits = {
-          cpu    = "4"
-          memory = "8 Gi"
+          cpu    = "8"
+          memory = "32 Gi"
         }
       }
       command = ["uvicorn"]
