@@ -54,6 +54,8 @@ def create_pdf_by_date(bucket_name, date, pdf_file):
             with blob.open("wb") as daily_pdf:
                 pdf_writer.write(daily_pdf)
 
+    return date_format
+
 
 def publish_message(bucket, pdf_date):
     publisher = pubsub_v1.PublisherClient()
@@ -77,9 +79,9 @@ async def process_pdf_by_date(request: Request):
     pdf_file = pdf_file_like(bucket_name, blob_name)
 
     try:
-        create_pdf_by_date(bucket_name, pdf_date, pdf_file)
+        date_format = create_pdf_by_date(bucket_name, pdf_date, pdf_file)
         print(f"Processing completed for {pdf_date}")
-        publish_message(bucket_name, pdf_date)
+        publish_message(bucket_name, date_format)
         print(f"Message published for {pdf_date}")
         return f"Processing completed for {pdf_date}", 200
     except Exception as e:

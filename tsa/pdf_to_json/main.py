@@ -4,7 +4,6 @@ import json
 from fastapi import FastAPI, Request
 from google.cloud import storage
 
-
 app = FastAPI()
 
 
@@ -14,19 +13,17 @@ def extract_json_from_pdf(bucket_name, pdf_date):
     pdf_date_blobs = bucket.list_blobs(prefix=f"{pdf_date}/", delimiter="/")
     print("inside", bucket_name)
     print("inside", pdf_date)
-    for pdf_date_blob in pdf_date_blobs:
-        print(pdf_date_blob)
-    # try:
-    #     for i, pdf_date_blob in enumerate(pdf_date_blobs, start=1):
-    #         print(i, pdf_date_blob)
-    # if i == 1:
-    #     continue
-    # uri = f"gs://{bucket_name}/{pdf_date_blob.name}"
-    # print(uri)
-    # json_response = pdf_to_json(uri)
-    # print(json_response)
-    # except:
-    #     raise
+    try:
+        for i, pdf_date_blob in enumerate(pdf_date_blobs, start=1):
+            print(i, pdf_date_blob)
+            # if i == 1:
+            #     continue
+            # uri = f"gs://{bucket_name}/{pdf_date_blob.name}"
+            # print(uri)
+            # json_response = pdf_to_json(uri)
+            # print(json_response)
+    except:
+        raise
 
 
 @app.post("/process_tsa_data/")
