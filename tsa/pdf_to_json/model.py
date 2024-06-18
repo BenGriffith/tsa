@@ -19,8 +19,12 @@ def generate(document, text, generation_config, safety_settings):
 
 def pdf_to_json(uri):
     document = Part.from_uri(uri, "application/pdf")
-    text = """You are a data extraction specialist. The page title and page title date should be excluded.
-    Return a JSON format. Do not create line breaks between each key/value pair or after each entry."""
+    text = """You are a data extraction specialist.
+
+    The page title and page title date should be excluded.
+    Return a JSON format that includes date, hour_of_day, airport_code, airport_name, airport_city, airport_state, airport_checkpoint, and total_passengers.
+
+    Do not create line breaks between each key/value pair or after each entry."""
 
     generation_config = {
         "max_output_tokens": 8192,
