@@ -19,6 +19,7 @@ def extract_json_from_pdf(bucket_name, pdf_date):
             continue
         uri = f"gs://{bucket_name}/{pdf_date_blob.name}"
         json_response = pdf_to_json(uri)
+        print(json_response)
 
 
 @app.post("/process_tsa_data/")
