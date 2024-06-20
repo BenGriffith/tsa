@@ -350,3 +350,180 @@ resource "google_bigquery_table" "fact_passenger_checkpoint" {
     }
   ])
 }
+
+resource "google_bigquery_table" "dim_time" {
+  dataset_id = google_bigquery_dataset.tsa.dataset_id
+  table_id = "dim_time"
+  deletion_protection = false
+
+  schema = jsonencode([
+    {
+      "name": "time_id",
+      "type": "integer",
+      "mode": "required"
+    },
+    {
+      "name": "date",
+      "type": "date",
+      "mode": "required"
+    },
+    {
+      "name": "day_of_week",
+      "type": "string",
+      "mode": "required"
+    },
+    {
+      "name": "month",
+      "type": "string",
+      "mode": "required"
+    },
+    {
+      "name": "quarter",
+      "type": "integer",
+      "mode": "required"
+    },
+    {
+      "name": "year",
+      "type": "integer",
+      "mode": "required"
+    }
+  ])
+}
+
+resource "google_bigquery_table" "dim_hour" {
+  dataset_id = google_bigquery_dataset.tsa.dataset_id
+  table_id = "dim_hour"
+  deletion_protection = false
+
+  schema = jsonencode([
+    {
+      "name": "hour_id",
+      "type": "integer",
+      "mode": "required"
+    },
+    {
+      "name": "hour_of_day",
+      "type": "integer",
+      "mode": "required"
+    }
+  ])
+}
+
+resource "google_bigquery_table" "dim_city" {
+  dataset_id = google_bigquery_dataset.tsa.dataset_id
+  table_id = "dim_city"
+  deletion_protection = false
+
+  schema = jsonencode([
+    {
+      "name": "city_id",
+      "type": "integer",
+      "mode": "required"
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "mode": "required"
+    }
+  ])
+}
+
+resource "google_bigquery_table" "dim_state" {
+  dataset_id = google_bigquery_dataset.tsa.dataset_id
+  table_id = "dim_state"
+  deletion_protection = false
+
+  schema = jsonencode([
+    {
+      "name": "state_id",
+      "type": "integer",
+      "mode": "required"
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "mode": "required"
+    }
+  ])
+}
+
+resource "google_bigquery_table" "city_state_bridge" {
+  dataset_id = google_bigquery_dataset.tsa.dataset_id
+  table_id = "city_state_bridge"
+  deletion_protection = false
+
+  schema = jsonencode([
+    {
+      "name": "city_id",
+      "type": "integer",
+      "mode": "required"
+    },
+    {
+      "name": "state_id",
+      "type": "integer",
+      "mode": "required"
+    }
+  ])
+}
+
+resource "google_bigquery_table" "dim_airport" {
+  dataset_id = google_bigquery_dataset.tsa.dataset_id
+  table_id = "dim_airport"
+  deletion_protection = false
+
+  schema = jsonencode([
+    {
+      "name": "airport_id",
+      "type": "integer",
+      "mode": "required"
+    },
+    {
+      "name": "code",
+      "type": "string",
+      "mode": "required"
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "mode": "required"
+    }
+  ])
+}
+
+resource "google_bigquery_table" "dim_checkpoint" {
+  dataset_id = google_bigquery_dataset.tsa.dataset_id
+  table_id = "dim_checkpoint"
+  deletion_protection = false
+
+  schema = jsonencode([
+    {
+      "name": "checkpoint_id",
+      "type": "integer",
+      "mode": "required"
+    },
+    {
+      "name": "name",
+      "type": "string",
+      "mode": "required"
+    }
+  ])
+}
+
+resource "google_bigquery_table" "airport_checkpoint_bridge" {
+  dataset_id = google_bigquery_dataset.tsa.dataset_id
+  table_id = "airport_checkpoint_bridge"
+  deletion_protection = false
+
+  schema = jsonencode([
+    {
+      "name": "airport_id",
+      "type": "integer",
+      "mode": "required"
+    },
+    {
+      "name": "checkpoint_id",
+      "type": "integer",
+      "mode": "required"
+    }
+  ])
+}
