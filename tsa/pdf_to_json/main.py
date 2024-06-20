@@ -1,12 +1,56 @@
 import base64
 import json
+import io
 
 from fastapi import FastAPI, Request
 from google.cloud import storage
+import pdfplumber
 
-from model import pdf_to_json
 
 app = FastAPI()
+
+
+def pdf_file_like(bucket_name, blob_name):
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blob = bucket.get_blob(blob_name)
+    pdf_bytes = blob.download_as_bytes()
+    pdf_file_like = io.BytesIO(pdf_bytes)
+    return pdf_file_like
+
+
+def table_to_json(columns, rows):
+    json_data = []
+    previous_values = {column: None for column in columns}
+    for row in rows:
+        row = dict(zip(columns, row))
+        for key, value in row.items():
+            if value is None:
+                row[key] = previous_values[key]
+            else:
+                previous_values[key] = value
+        json_data.append(row)
+    return json_data
+
+
+def clean_name(column):
+    new_column = ""
+    for char in column:
+        if char not in "\n, ".split(","):
+            new_column += char
+    return new_column.lower()
+
+
+def pdf_to_json(pdf_file):
+    with pdfplumber.open(pdf_file) as pdf:
+        table_settings = {"vertical_strategy": "lines", "horizontal_strategy": "lines"}
+        table_lattice = pdf.pages[0].extract_table(table_settings)
+        airport_column_index = table_lattice[0].index("Airport")
+        table_lattice[0][airport_column_index + 1] = "name"
+        columns = [clean_name(column) for column in table_lattice[0]]
+        rows = table_lattice[1:]
+        json_data = table_to_json(columns, rows)
+        return json_data
 
 
 def extract_json_from_pdf(bucket_name, pdf_date):
@@ -17,8 +61,8 @@ def extract_json_from_pdf(bucket_name, pdf_date):
     for i, pdf_date_blob in enumerate(pdf_date_blobs, start=1):
         if i == 1:
             continue
-        uri = f"gs://{bucket_name}/{pdf_date_blob.name}"
-        json_response = pdf_to_json(uri)
+        pdf_file = pdf_file_like(bucket_name, pdf_date_blob.name)
+        json_response = pdf_to_json(pdf_file)
         print(json_response)
 
 
