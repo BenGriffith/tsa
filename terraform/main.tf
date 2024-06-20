@@ -202,8 +202,8 @@ resource "google_cloud_run_v2_service" "create_pdf_by_date" {
 
       resources {
         limits = {
-          cpu    = "8"
-          memory = "32 Gi"
+          cpu    = "4"
+          memory = "16 Gi"
         }
       }
       command = ["uvicorn"]
@@ -233,8 +233,8 @@ resource "google_cloud_run_v2_service" "tsa_data_to_bigquery" {
 
       resources {
         limits = {
-          cpu    = "8"
-          memory = "32 Gi"
+          cpu    = "4"
+          memory = "16 Gi"
         }
       }
       command = ["uvicorn"]
@@ -283,4 +283,70 @@ resource "google_cloud_scheduler_job" "scrape_pdf_job" {
       service_account_email = google_service_account.scheduler_sa.email
     }
   }
+}
+
+
+# BigQuery
+resource "google_bigquery_dataset" "tsa" {
+  dataset_id = "tsa"
+  location = var.location
+}
+
+resource "google_bigquery_table" "fact_passenger_checkpoint" {
+  dataset_id = google_bigquery_dataset.tsa.dataset_id
+  table_id = "fact_passenger_checkpoint"
+  deletion_protection = false
+
+  time_partitioning {
+    type = "DAY"
+    field = "date"
+  }
+
+  schema = jsonencode([
+    {
+      "name": "date",
+      "type": "date",
+      "mode": "required"
+    },
+    {
+      "name": "fact_id",
+      "type": "integer",
+      "mode": "required"
+    },
+    {
+      "name": "time_id",
+      "type": "integer",
+      "mode": "required"
+    },
+    {
+      "name": "hour_id",
+      "type": "integer",
+      "mode": "required"
+    },
+    {
+      "name": "airport_id",
+      "type": "integer",
+      "mode": "required"
+    },
+    {
+      "name": "checkpoint_id",
+      "type": "integer",
+      "mode": "required"
+    },
+    {
+      "name": "city_id",
+      "type": "integer",
+      "mode": "required"
+    },
+    {
+      "name": "state_id",
+      "type": "integer",
+      "mode": "required"
+    },
+    {
+      "name": "passengers",
+      "type": "integer",
+      "mode": "required"
+    }
+  ])
 }
