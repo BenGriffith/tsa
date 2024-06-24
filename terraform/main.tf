@@ -184,7 +184,8 @@ resource "google_cloud_run_v2_service" "create_pdf_by_date" {
 
   template {
     scaling {
-      max_instance_count = 1
+      max_instance_count = 10
+      min_instance_count = 0
     }
 
     containers {
@@ -203,14 +204,14 @@ resource "google_cloud_run_v2_service" "create_pdf_by_date" {
       resources {
         limits = {
           cpu    = "4"
-          memory = "16 Gi"
+          memory = "2 Gi"
         }
       }
       command = ["uvicorn"]
       args    = ["main:app", "--host", "0.0.0.0", "--port", "8080"]
     }
 
-    timeout = "3600s"
+    timeout = "900s"
 
     vpc_access {
       connector = google_vpc_access_connector.serverless_connector.id
@@ -225,23 +226,34 @@ resource "google_cloud_run_v2_service" "tsa_data_to_bigquery" {
 
   template {
     scaling {
-      max_instance_count = 1
+      max_instance_count = 10
+      min_instance_count = 0
     }
 
     containers {
       image = "gcr.io/${var.project_id}/tsa-data-to-bigquery:latest"
 
+      env {
+        name  = "PROJECT_ID"
+        value = var.project_id
+      }
+
+      env {
+        name = "DATASET_ID"
+        value = google_bigquery_dataset.tsa.dataset_id
+      }
+
       resources {
         limits = {
           cpu    = "4"
-          memory = "16 Gi"
+          memory = "2 Gi"
         }
       }
       command = ["uvicorn"]
       args    = ["main:app", "--host", "0.0.0.0", "--port", "8080"]
     }
 
-    timeout = "3600s"
+    timeout = "900s"
 
     vpc_access {
       connector = google_vpc_access_connector.serverless_connector.id
@@ -309,7 +321,7 @@ resource "google_bigquery_table" "fact_passenger_checkpoint" {
       "mode": "required"
     },
     {
-      "name": "fact_id",
+      "name": "event_id",
       "type": "integer",
       "mode": "required"
     },

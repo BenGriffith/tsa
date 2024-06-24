@@ -1,5 +1,6 @@
 import os
 import calendar
+import uuid
 
 from datetime import datetime
 import hashlib
@@ -21,6 +22,13 @@ class TableManager:
         query = (
             f"""SELECT COUNTIF({key} = {key_value}) AS record_count FROM `{table_id}`"""
         )
+        query_result = self.bq_client.query(query).result()
+        record_count = next(query_result).get("record_count", 0)
+        return record_count > 0
+
+    def exists_in_bridge(self, table, first_key, first_value, second_key, second_value):
+        table_id = f"{PROJECT_ID}.{DATASET_ID}.{table}"
+        query = f"""SELECT COUNTIF({first_key} = {first_value} AND {second_key} = {second_value}) AS record_count FROM `{table_id}`"""
         query_result = self.bq_client.query(query).result()
         record_count = next(query_result).get("record_count", 0)
         return record_count > 0
@@ -62,10 +70,74 @@ class TableManager:
                     calendar.weekday(_tsa_date.year, _tsa_date.month, _tsa_date.day)
                 ]
                 month = calendar.month_name[_tsa_date.month]
-                quarter = ""
-                year = ""
+                quarter = (_tsa_date.month - 1) // 3
+                year = _tsa_date.year
+                self.insert_row(
+                    "dim_time",
+                    {
+                        "time_id": time_id,
+                        "date": tsa_date,
+                        "day_of_week": day_of_week,
+                        "month": month,
+                        "quarter": quarter,
+                        "year": year,
+                    },
+                )
 
             # dim_airport
+            if not self.exists("dim_airport", "airport_id", airport_id):
+                self.insert_row(
+                    "dim_airport",
+                    {"airport_id": airport_id, "code": code, "name": name},
+                )
+
             # dim_checkpoint
+            if not self.exists("dim_checkpoing", "checkpoint_id", checkpoint_id):
+                self.insert_row(
+                    "dim_checkpoint",
+                    {"checkpoint_id": checkpoint_id, "name": checkpoint},
+                )
+
             # dim_city
+            if not self.exists("dim_city", "city_id", city_id):
+                self.insert_row("dim_city", {"city_id": city_id, "name": city})
+
             # dim_state
+            if not self.exists("dim_state", "state_id", state_id):
+                self.insert_row("dim_state", {"state_id": state_id, "name": state})
+
+            # fact_passenger_checkpoint
+            self.insert_row(
+                "fact_passenger_checkpoint",
+                {
+                    "event_id": str(uuid.uuid4()),
+                    "time_id": time_id,
+                    "hour_id": hour_id,
+                    "airport_id": airport_id,
+                    "checkpoint_id": checkpoint_id,
+                    "city_id": city_id,
+                    "state_id": state_id,
+                    "passengers": passengers,
+                    "date": tsa_date,
+                },
+            )
+
+            # bridge tables
+            if not self.exists_in_bridge(
+                "airport_checkpoint_bridge",
+                "airport_id",
+                airport_id,
+                "checkpoint_id",
+                checkpoint_id,
+            ):
+                self.insert_row(
+                    "airport_checkpoint_bridge",
+                    {"airport_id": airport_id, "checkpoint_id": checkpoint_id},
+                )
+
+            if not self.exists_in_bridge(
+                "city_state_bridge", "city_id", city_id, "state_id", state_id
+            ):
+                self.insert_row(
+                    "city_state_bridge", {"city_id": city_id, "state_id": state_id}
+                )
