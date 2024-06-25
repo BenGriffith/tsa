@@ -1,6 +1,8 @@
+import base64
+import json
 import io
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from google.cloud import storage
 import pdfplumber
 
@@ -66,21 +68,17 @@ def extract_json_from_pdf(bucket_name, pdf_date):
         TableManager(json_data).execute()
 
 
-# @app.post("/process_tsa_data/")
-# async def process_pdf_dates(request: Request):
-#     pubsub_message = await request.json()
-#     pubsub_message = pubsub_message["message"]
-#     pubsub_message = base64.b64decode(pubsub_message["data"]).decode("utf-8")
-#     message_json = json.loads(pubsub_message)
+@app.post("/process_tsa_data/")
+async def process_pdf_dates(request: Request):
+    pubsub_message = await request.json()
+    pubsub_message = pubsub_message["message"]
+    pubsub_message = base64.b64decode(pubsub_message["data"]).decode("utf-8")
+    message_json = json.loads(pubsub_message)
 
-#     bucket_name = message_json["bucket"]
-#     pdf_date = message_json["pdf_date"]
-#     try:
-#         extract_json_from_pdf(bucket_name, pdf_date)
-#         return f"Processing completed for {pdf_date}", 200
-#     except Exception as e:
-#         return f"Error encountered: {e}", 500
-
-
-if __name__ == "__main__":
-    extract_json_from_pdf("tsa-throughput", "2024-05-19")
+    bucket_name = message_json["bucket"]
+    pdf_date = message_json["pdf_date"]
+    try:
+        extract_json_from_pdf(bucket_name, pdf_date)
+        return {f"Processing completed for {pdf_date}", 200}
+    except Exception as e:
+        return {f"Error encountered: {e}", 500}

@@ -322,7 +322,7 @@ resource "google_bigquery_table" "fact_passenger_checkpoint" {
     },
     {
       "name": "event_id",
-      "type": "integer",
+      "type": "string",
       "mode": "required"
     },
     {

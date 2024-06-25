@@ -92,7 +92,7 @@ class TableManager:
                 )
 
             # dim_checkpoint
-            if not self.exists("dim_checkpoing", "checkpoint_id", checkpoint_id):
+            if not self.exists("dim_checkpoint", "checkpoint_id", checkpoint_id):
                 self.insert_row(
                     "dim_checkpoint",
                     {"checkpoint_id": checkpoint_id, "name": checkpoint},
@@ -105,22 +105,6 @@ class TableManager:
             # dim_state
             if not self.exists("dim_state", "state_id", state_id):
                 self.insert_row("dim_state", {"state_id": state_id, "name": state})
-
-            # fact_passenger_checkpoint
-            self.insert_row(
-                "fact_passenger_checkpoint",
-                {
-                    "event_id": str(uuid.uuid4()),
-                    "time_id": time_id,
-                    "hour_id": hour_id,
-                    "airport_id": airport_id,
-                    "checkpoint_id": checkpoint_id,
-                    "city_id": city_id,
-                    "state_id": state_id,
-                    "passengers": passengers,
-                    "date": tsa_date,
-                },
-            )
 
             # bridge tables
             if not self.exists_in_bridge(
@@ -141,3 +125,19 @@ class TableManager:
                 self.insert_row(
                     "city_state_bridge", {"city_id": city_id, "state_id": state_id}
                 )
+
+            # fact_passenger_checkpoint
+            self.insert_row(
+                "fact_passenger_checkpoint",
+                {
+                    "date": tsa_date,
+                    "event_id": str(uuid.uuid4()),
+                    "time_id": time_id,
+                    "hour_id": hour_id,
+                    "airport_id": airport_id,
+                    "checkpoint_id": checkpoint_id,
+                    "city_id": city_id,
+                    "state_id": state_id,
+                    "passengers": passengers,
+                },
+            )
