@@ -79,6 +79,6 @@ async def process_pdf_dates(request: Request):
     pdf_date = message_json["pdf_date"]
     try:
         extract_json_from_pdf(bucket_name, pdf_date)
-        return {f"Processing completed for {pdf_date}", 200}
+        return f"Processing completed for {pdf_date}", 200
     except Exception as e:
-        return {f"Error encountered: {e}", 500}
+        return f"Error encountered: {e}", 500
