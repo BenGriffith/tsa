@@ -18,8 +18,10 @@ def read_pdf_dates(blob_name):
     start_month, start_day, start_year = start_date
     end_month, end_day, end_year = end_date
 
-    start_date = datetime.strptime(f"{start_year}-{start_month}-{start_day}", "%Y-%b-%d")
-    end_date = datetime.strptime(f"{end_year}-{end_month}-{end_day}", "%Y-%b-%d")
+    start_date = datetime.strptime(
+        f"{start_year}-{start_month}-{start_day}", "%Y-%B-%d"
+    )
+    end_date = datetime.strptime(f"{end_year}-{end_month}-{end_day}", "%Y-%B-%d")
 
     date_list = []
     current_date = start_date
@@ -41,6 +43,7 @@ def publish_pdf_date_messages(bucket_name, blob_name, pdf_dates):
                 "pdf_date": pdf_date,
             }
         )
+        print(f"{message_json} published to {TOPIC}")
         message_bytes = message_json.encode("utf-8")
         publisher.publish(topic_path, data=message_bytes)
 
