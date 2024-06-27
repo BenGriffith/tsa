@@ -127,11 +127,12 @@ class TableManager:
                 )
 
             # fact_passenger_checkpoint
+            event_id = str(uuid.uuid4())
             self.insert_row(
                 "fact_passenger_checkpoint",
                 {
                     "date": tsa_date,
-                    "event_id": str(uuid.uuid4()),
+                    "event_id": event_id,
                     "time_id": time_id,
                     "hour_id": hour_id,
                     "airport_id": airport_id,
@@ -141,3 +142,4 @@ class TableManager:
                     "passengers": passengers,
                 },
             )
+            print(f"{event_id} loaded into fact_passenger_checkpoint")

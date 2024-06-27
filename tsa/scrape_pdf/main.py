@@ -31,6 +31,7 @@ def update_processed_dates_blob(processed_dates):
     json_data["processed_dates"].extend(processed_dates)
 
     blob.upload_from_string(json.dumps(json_data), content_type="application/json")
+    print(f"added {processed_dates} to log of processed dates")
 
 
 def read_tsa_dates_from_gcs():
@@ -55,6 +56,7 @@ def read_pdf():
             continue
 
         links.append(link_element["href"])
+    print(f"links fetched from TSA FOIA: {links}")
     return links
 
 
@@ -66,11 +68,11 @@ def write_pdf(link, blob_name):
     blob = bucket.blob(f"{SOURCE_PDF_PREFIX}/{blob_name}")
     blob.upload_from_string(response.content, content_type="application/pdf")
     if blob.exists:
+        print(f"{blob_name} created")
         return True
 
 
 def process_pdf(context):
-
     links_to_process = read_pdf()
     links_processed = read_tsa_dates_from_gcs()
     links_processed_set = set(links_processed["processed_dates"])
@@ -94,4 +96,4 @@ def process_pdf(context):
     if dates_processed:
         update_processed_dates_blob(dates_processed)
 
-    return "Processing complete", 200
+    return {"Processing complete", 200}

@@ -43,6 +43,7 @@ def publish_pdf_date_messages(bucket_name, blob_name, pdf_dates):
                 "pdf_date": pdf_date,
             }
         )
+        print(f"{message_json} published to {topic_path}")
         message_bytes = message_json.encode("utf-8")
         publisher.publish(topic_path, data=message_bytes)
 
