@@ -142,4 +142,4 @@ class TableManager:
                     "passengers": passengers,
                 },
             )
-            print(f"{event_id} loaded into fact_passenger_checkpoint")
+            print(f"event_id {event_id} loaded into fact_passenger_checkpoint")
