@@ -36,11 +36,7 @@ def table_to_json(columns, rows):
 
 
 def clean_name(column):
-    new_column = ""
-    for char in column:
-        if char not in "\n, ".split(","):
-            new_column += char
-    return new_column.lower()
+    return "".join(char for char in column if char not in "\n ").lower()
 
 
 def pdf_to_json(pdf_file):
@@ -60,9 +56,7 @@ def extract_json_from_pdf(bucket_name, pdf_date):
     bucket = client.bucket(bucket_name)
     pdf_date_blobs = bucket.list_blobs(prefix=f"{pdf_date}/", delimiter="/")
 
-    for i, pdf_date_blob in enumerate(pdf_date_blobs, start=1):
-        if i == 1:
-            continue
+    for pdf_date_blob in pdf_date_blobs[1:]:
         pdf_file = pdf_file_like(bucket_name, pdf_date_blob.name)
         json_data = pdf_to_json(pdf_file)
         TableManager(json_data).execute()
