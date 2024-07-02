@@ -72,16 +72,16 @@ resource "google_storage_bucket_object" "scrape_weekly_pdf" {
   source = data.archive_file.scrape_weekly_pdf_function.output_path
 }
 
-data "archive_file" "create_daily_pdf_function" {
+data "archive_file" "publish_dates_from_weekly_pdf_function" {
   type        = "zip"
-  source_dir  = "${path.root}/../tsa/create_daily_pdf"
-  output_path = "${path.root}/../create_daily_pdf.zip"
+  source_dir  = "${path.root}/../tsa/publish_dates_from_weekly_pdf"
+  output_path = "${path.root}/../publish_dates_from_weekly_pdf.zip"
 }
 
-resource "google_storage_bucket_object" "create_daily_pdf" {
-  name   = "cloud-function/create_daily_pdf.zip"
+resource "google_storage_bucket_object" "publish_dates_from_weekly_pdf" {
+  name   = "cloud-function/publish_dates_from_weekly_pdf.zip"
   bucket = google_storage_bucket.tsa_throughput.name
-  source = data.archive_file.create_daily_pdf_function.output_path
+  source = data.archive_file.publish_dates_from_weekly_pdf_function.output_path
 }
 
 resource "google_storage_notification" "pdf_notification" {
@@ -152,15 +152,15 @@ resource "google_cloudfunctions_function" "scrape_weekly_pdf" {
   depends_on = [google_project_iam_member.scheduler_invoker]
 }
 
-resource "google_cloudfunctions_function" "create_daily_pdf" {
-  name                          = "create-daily-pdf"
+resource "google_cloudfunctions_function" "publish_dates_from_weekly_pdf" {
+  name                          = "publish-dates-from-weekly-pdf"
   region                        = var.region
-  description                   = "create pdfs by date"
+  description                   = "publish dates to from weekly pdf to pub/sub"
   runtime                       = "python39"
   available_memory_mb           = 512
   timeout                       = 540
   source_archive_bucket         = google_storage_bucket.tsa_throughput.name
-  source_archive_object         = google_storage_bucket_object.create_daily_pdf.name
+  source_archive_object         = google_storage_bucket_object.publish_dates_from_weekly_pdf.name
   entry_point                   = "process_pdf_dates"
   vpc_connector                 = google_vpc_access_connector.serverless_connector.name
   vpc_connector_egress_settings = "PRIVATE_RANGES_ONLY"
