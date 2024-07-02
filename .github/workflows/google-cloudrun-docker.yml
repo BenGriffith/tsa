@@ -7,7 +7,7 @@ on:
 env:
     PROJECT_ID: "${{ secrets.PROJECT_ID }}"
     GAR_LOCATION: "us-central1"
-    CREATE_PDF_SERVICE: "create-pdf-by-date"
+    CREATE_PDF_SERVICE: "create-daily-pdf"
     TSA_TO_BIGQUERY_SERVICE: "tsa-data-to-bigquery"
     REGION: "us-central1"
     TAG: "latest"
@@ -39,14 +39,14 @@ jobs:
 
             - name: Build and Push Create PDF By Date Container
               run: |-
-                cp requirements.txt tsa/create_pdf_by_date/
-                cd tsa/create_pdf_by_date/
+                cp requirements.txt tsa/create_daily_pdf/
+                cd tsa/create_daily_pdf/
                 docker build -t "gcr.io/${{ env.PROJECT_ID }}/${{ env.CREATE_PDF_SERVICE }}:${{ env.TAG }}" ./
                 docker push "gcr.io/${{ env.PROJECT_ID }}/${{ env.CREATE_PDF_SERVICE }}:${{ env.TAG }}"
 
             - name: Build and Push TSA Data to BigQuery Container
               run: |-
-                cp requirements.txt tsa/pdf_to_json/
-                cd tsa/pdf_to_json/
+                cp requirements.txt tsa/load_tsa_data_to_bigquery/
+                cd tsa/load_tsa_data_to_bigquery/
                 docker build -t "gcr.io/${{ env.PROJECT_ID }}/${{ env.TSA_TO_BIGQUERY_SERVICE }}:${{ env.TAG }}" ./
                 docker push "gcr.io/${{ env.PROJECT_ID }}/${{ env.TSA_TO_BIGQUERY_SERVICE }}:${{ env.TAG }}"
