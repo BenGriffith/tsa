@@ -1,4 +1,4 @@
-# Overview (Work in Progress)
+# Overview
 
 Data source: https://www.tsa.gov/foia/readingroom
 
@@ -6,7 +6,8 @@ Data source: https://www.tsa.gov/foia/readingroom
 
 ## Diagrams
 
+### Entity Relationship Diagram (ERD)
+![Entity Relationship Diagram](assets/erd.png "Entity Relationship Diagram")
+
 ### System Workflow
-
 ![System Workflow](assets/mind-map.png "System Workflow")
-
